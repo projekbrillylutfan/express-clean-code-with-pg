@@ -4,27 +4,19 @@ import { User } from "../models/entity/user";
 import listUser from "../../data/users.json";
 import { UserRequest } from "../models/dto/user";
 import fs from "fs";
+import UserService from "../services/users";
 
 class UserHandler {
   async getUsers(req: Request, res: Response) {
-    const nameQuery: string = req.query.name as string;
+    const queryName: string = req.query.name as string;
 
-    let filteredUsers: User[] = listUser.map((user: User) => ({
-      id: user.id,
-      name: user.name || "",
-    }));
-
-    if (nameQuery) {
-      filteredUsers = filteredUsers.filter((user: User) =>
-        user.name?.toLowerCase().includes(nameQuery.toLowerCase())
-      );
-    }
+    const userList: User[] = await UserService.getUsers(queryName);
 
     const response: DefaultResponse = {
       status: "ok",
       message: "sukses menampilkan data",
       data: {
-        users: filteredUsers,
+        users: userList,
       },
     };
 
@@ -69,21 +61,14 @@ class UserHandler {
 
         res.status(400).send(response)
     } else {
-        const userToCreate: User = {
-            id: listUser[listUser.length - 1].id + 1,
-            name: payload.name,
-        }
-
-        const users: User[] = listUser;
-        users.push(userToCreate);
-
-        fs.writeFileSync("./data/users.json", JSON.stringify(users));
+        // TODO: call servicr to create user
+        const createUser: User = await UserService.createUser(payload);
 
         const response: DefaultResponse = {
             status: "Data Ditambahkan",
             message: "User berhasil ditambahkan",
             data: {
-                created_user: userToCreate,
+                created_user: createUser,
             }
         }
 
